@@ -9,13 +9,12 @@ import {
   Ban,
   RefreshCw,
 } from "lucide-react";
-
-type Booking = {
-  id: string;
-  title: string;
-  start: number; // minutes after midnight
-  end: number; // minutes after midnight
-};
+import {
+  type AvailabilityResult,
+  type Booking,
+  checkAvailability,
+} from "@/domain/availability";
+import { MAX_BOOKING_MINUTES, MINUTES_PER_DAY, fromHHMM, toHHMM } from "@/domain/time";
 
 const ROOMS = [
   { id: "lib-201", name: "Library Study Room 201" },
@@ -40,42 +39,13 @@ const INITIAL_BOOKINGS: Record<string, Booking[]> = {
   ],
 };
 
-// Convert minutes after midnight (0–1440) to "HH:MM".
-function toHHMM(min: number): string {
-  const m = ((min % 1440) + 1440) % 1440;
-  const h = Math.floor(m / 60);
-  const mm = m % 60;
-  return `${h.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}`;
-}
-
-// Convert an "HH:MM" string to minutes after midnight. Returns null if invalid.
-function fromHHMM(value: string): number | null {
-  const match = /^(\d{2}):(\d{2})$/.exec(value.trim());
-  if (!match) return null;
-  const h = parseInt(match[1], 10);
-  const mm = parseInt(match[2], 10);
-  if (h < 0 || h > 23 || mm < 0 || mm > 59) return null;
-  return h * 60 + mm;
-}
-
-type ValidationResult = {
-  ok: boolean;
-  reason: string;
-  detail?: string;
-};
-
-function overlap(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
-  // Touching endpoints do NOT overlap.
-  return aStart < bEnd && bStart < aEnd;
-}
-
 function App() {
   const [roomId, setRoomId] = useState<string>(ROOMS[0].id);
   const [nowStr, setNowStr] = useState<string>("08:30");
   const [startStr, setStartStr] = useState<string>("10:30");
   const [endStr, setEndStr] = useState<string>("11:30");
   const [blocked, setBlocked] = useState<boolean>(false);
-  const [result, setResult] = useState<ValidationResult | null>(null);
+  const [result, setResult] = useState<AvailabilityResult | null>(null);
 
   const bookings = useMemo(() => INITIAL_BOOKINGS[roomId] ?? [], [roomId]);
 
@@ -90,71 +60,17 @@ function App() {
   if (now === null) fieldIssues.push("'Now' must be a valid time (HH:MM).");
   if (start === null) fieldIssues.push("'Start' must be a valid time (HH:MM).");
   if (end === null) fieldIssues.push("'End' must be a valid time (HH:MM).");
-  if (now !== null && (now < 0 || now > 1439))
+  if (now !== null && (now < 0 || now > MINUTES_PER_DAY - 1))
     fieldIssues.push("'Now' must be between 00:00 and 23:59.");
   if (start !== null && end !== null && start >= end)
     fieldIssues.push("Start must be strictly before end.");
   if (start !== null && now !== null && !(start > now))
     fieldIssues.push("Start must be strictly after 'now'.");
-  if (duration !== null && duration > 120)
-    fieldIssues.push("Duration must not exceed 120 minutes (2 hours).");
+  if (duration !== null && duration > MAX_BOOKING_MINUTES)
+    fieldIssues.push(`Duration must not exceed ${MAX_BOOKING_MINUTES} minutes (2 hours).`);
 
   function handleCheck() {
-    if (now === null || start === null || end === null) {
-      setResult({ ok: false, reason: "Invalid time input", detail: "Use HH:MM format for all fields." });
-      return;
-    }
-    if (now < 0 || now > 1439) {
-      setResult({ ok: false, reason: "'Now' is out of range", detail: "Now must be 00:00–23:59." });
-      return;
-    }
-    if (!(0 <= start && start < end && end <= 1440)) {
-      setResult({
-        ok: false,
-        reason: "Invalid time window",
-        detail: "Need 0 ≤ start < end ≤ 1440 (24:00).",
-      });
-      return;
-    }
-    if (!(start > now)) {
-      setResult({
-        ok: false,
-        reason: "Start is not in the future",
-        detail: `Start (${toHHMM(start)}) must be strictly after now (${toHHMM(now)}).`,
-      });
-      return;
-    }
-    const dur = end - start;
-    if (dur > 120) {
-      setResult({
-        ok: false,
-        reason: "Booking too long",
-        detail: `Duration is ${dur} min. Maximum allowed is 120 min.`,
-      });
-      return;
-    }
-    if (blocked) {
-      setResult({
-        ok: false,
-        reason: "Room is blocked",
-        detail: "This room is currently blocked and cannot be booked.",
-      });
-      return;
-    }
-    const conflict = bookings.find((b) => overlap(start, end, b.start, b.end));
-    if (conflict) {
-      setResult({
-        ok: false,
-        reason: "Overlaps an existing booking",
-        detail: `Conflicts with "${conflict.title}" (${toHHMM(conflict.start)}–${toHHMM(conflict.end)}).`,
-      });
-      return;
-    }
-    setResult({
-      ok: true,
-      reason: "Available",
-      detail: `${toHHMM(start)}–${toHHMM(end)} (${dur} min) is free on this room.`,
-    });
+    setResult(checkAvailability({ now, start, end }, bookings, blocked));
   }
 
   function handleReset() {
@@ -234,7 +150,7 @@ function App() {
             {duration !== null && (
               <span
                 className={`rounded-md px-2 py-1 font-mono ${
-                  duration > 120
+                  duration > MAX_BOOKING_MINUTES
                     ? "bg-red-50 text-red-700"
                     : duration <= 0
                     ? "bg-amber-50 text-amber-700"
@@ -372,8 +288,8 @@ function App() {
           <div className="mb-4">
             <div className="relative h-10 w-full overflow-hidden rounded-lg bg-slate-100">
               {bookings.map((b) => {
-                const leftPct = (b.start / 1440) * 100;
-                const widthPct = ((b.end - b.start) / 1440) * 100;
+                const leftPct = (b.start / MINUTES_PER_DAY) * 100;
+                const widthPct = ((b.end - b.start) / MINUTES_PER_DAY) * 100;
                 return (
                   <div
                     key={b.id}
@@ -386,12 +302,12 @@ function App() {
                 );
               })}
               {/* Proposed slot overlay */}
-              {start !== null && end !== null && start < end && end <= 1440 && (
+              {start !== null && end !== null && start < end && end <= MINUTES_PER_DAY && (
                 <div
                   className="absolute top-1 bottom-1 rounded border-2 border-dashed border-blue-700 bg-blue-300/40"
                   style={{
-                    left: `${(start / 1440) * 100}%`,
-                    width: `${((end - start) / 1440) * 100}%`,
+                    left: `${(start / MINUTES_PER_DAY) * 100}%`,
+                    width: `${((end - start) / MINUTES_PER_DAY) * 100}%`,
                   }}
                   title="Your proposed booking"
                 />
@@ -401,7 +317,7 @@ function App() {
                 <div
                   key={t}
                   className="absolute top-0 bottom-0 border-l border-slate-200"
-                  style={{ left: `${(t / 1440) * 100}%` }}
+                  style={{ left: `${(t / MINUTES_PER_DAY) * 100}%` }}
                 />
               ))}
             </div>
@@ -410,7 +326,7 @@ function App() {
                 <span
                   key={t}
                   className="absolute -translate-x-1/2"
-                  style={{ left: `${(t / 1440) * 100}%` }}
+                  style={{ left: `${(t / MINUTES_PER_DAY) * 100}%` }}
                 >
                   {toHHMM(t)}
                 </span>
