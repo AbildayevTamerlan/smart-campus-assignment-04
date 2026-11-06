@@ -13,6 +13,7 @@ import {
   type AvailabilityResult,
   type Booking,
   checkAvailability,
+  validateTimes,
 } from "@/domain/availability";
 import { MAX_BOOKING_MINUTES, MINUTES_PER_DAY, fromHHMM, toHHMM } from "@/domain/time";
 
@@ -53,21 +54,12 @@ function App() {
   const start = fromHHMM(startStr);
   const end = fromHHMM(endStr);
 
-  // Live preview of duration & basic field issues (without committing a result).
+  // Duration readout for the chip below the inputs (display only).
   const duration = start !== null && end !== null ? end - start : null;
 
-  const fieldIssues: string[] = [];
-  if (now === null) fieldIssues.push("'Now' must be a valid time (HH:MM).");
-  if (start === null) fieldIssues.push("'Start' must be a valid time (HH:MM).");
-  if (end === null) fieldIssues.push("'End' must be a valid time (HH:MM).");
-  if (now !== null && (now < 0 || now > MINUTES_PER_DAY - 1))
-    fieldIssues.push("'Now' must be between 00:00 and 23:59.");
-  if (start !== null && end !== null && start >= end)
-    fieldIssues.push("Start must be strictly before end.");
-  if (start !== null && now !== null && !(start > now))
-    fieldIssues.push("Start must be strictly after 'now'.");
-  if (duration !== null && duration > MAX_BOOKING_MINUTES)
-    fieldIssues.push(`Duration must not exceed ${MAX_BOOKING_MINUTES} minutes (2 hours).`);
+  // Live warnings come from the same validation the Check button uses.
+  const validation = validateTimes({ now, start, end });
+  const fieldIssues = validation.ok ? [] : validation.issues.map((issue) => issue.message);
 
   function handleCheck() {
     setResult(checkAvailability({ now, start, end }, bookings, blocked));
