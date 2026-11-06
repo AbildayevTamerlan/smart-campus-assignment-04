@@ -1,0 +1,28 @@
+%% BEFORE: original Bolt.new export (commit d809e10)
+flowchart TD
+  main["src/main.tsx<br/>React entry point"]
+  subgraph APP["src/App.tsx (497 lines): everything in one file"]
+    direction TB
+    types["types: Booking, ValidationResult"]
+    data["data: ROOMS (3 rooms, id + name)<br/>INITIAL_BOOKINGS keyed by room id string"]
+    helpers["helpers: toHHMM, fromHHMM, overlap"]
+    comp["App component:<br/>state (room, now/start/end, global blocked toggle, result)<br/>fieldIssues: live warnings (rules copy #1)<br/>handleCheck: result (rules copy #2)<br/>all JSX: form, toggle, result, timeline, list, rules"]
+    tf["TimeField component"]
+  end
+  react(["react / react-dom"])
+  lucide(["lucide-react"])
+  supa(["@supabase/supabase-js<br/>(dependency, never imported)"])
+
+  main --> comp
+  comp --> types
+  comp --> data
+  comp --> helpers
+  comp --> tf
+  data --> types
+  comp --> react
+  comp --> lucide
+  main --> react
+  supa ~~~ main
+
+  classDef unused stroke-dasharray: 5 5,color:#999;
+  class supa unused

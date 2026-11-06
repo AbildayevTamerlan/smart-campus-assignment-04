@@ -1,0 +1,142 @@
+# Raw measurements for docs/EVALUATION.md
+# Generated 2026-11-06T19:17:44Z with Node v22.23.4, npm 10.9.9
+
+================ d809e10 (original)
+$ npm run typecheck
+exit 0
+$ npm run lint
+exit 0
+$ npm run build
+dist/assets/index-nsC1ubIS.css   15.33 kB │ gzip:  3.48 kB
+dist/assets/index-kI9CW5up.js   158.59 kB │ gzip: 50.51 kB
+✓ built in 2.06s
+$ npm test
+npm error Missing script: "test"
+$ npm audit | tail
+22 vulnerabilities (2 low, 6 moderate, 14 high)
+$ npm audit --omit=dev
+1 high severity vulnerability
+$ find src -name '*.ts*' | xargs wc -l
+  497 src/App.tsx
+   10 src/main.tsx
+    1 src/vite-env.d.ts
+  508 total
+$ grep -cE '\b(120|1439|1440)\b' (lines with these literals, per file)
+src/App.tsx:22
+
+================ HEAD 1543f39 (final)
+$ npm run typecheck
+exit 0
+$ npm run lint
+exit 0
+$ npm run build
+dist/assets/index-CUi8cbQa.css   14.89 kB │ gzip:  3.52 kB
+dist/assets/index-CHumS9be.js   164.97 kB │ gzip: 52.31 kB
+✓ built in 2.18s
+$ npm test
+ Test Files  5 passed (5)
+      Tests  113 passed (113)
+$ npm audit | tail
+25 vulnerabilities (2 low, 7 moderate, 14 high, 2 critical)
+$ npm audit --omit=dev
+found 0 vulnerabilities
+$ find src -name '*.ts*' | xargs wc -l
+  160 src/App.tsx
+   19 src/components/AppHeader.tsx
+   34 src/components/BookingList.tsx
+   55 src/components/BookingTimeline.tsx
+   36 src/components/BookingsPanel.tsx
+   29 src/components/CheckActions.tsx
+   40 src/components/ResultCard.tsx
+   79 src/components/RoomFilters.tsx
+   88 src/components/RoomList.tsx
+   17 src/components/RulesPanel.tsx
+   31 src/components/TimeField.tsx
+   43 src/components/TimeReadout.tsx
+   21 src/components/ValidationWarnings.tsx
+   70 src/data/rooms.ts
+  124 src/domain/availability.ts
+   39 src/domain/roomFilter.ts
+   25 src/domain/time.ts
+   10 src/main.tsx
+    1 src/vite-env.d.ts
+  921 total
+$ grep -cE '\b(120|1439|1440)\b' (lines with these literals, per file)
+src/components/RulesPanel.tsx:2
+src/components/TimeReadout.tsx:1
+src/components/BookingTimeline.tsx:1
+src/domain/time.ts:4
+src/domain/availability.ts:1
+
+================ duplicated validation in original App.tsx
+$ git show d809e10:src/App.tsx | sed -n '89,100p'   (live warnings, 12 lines)
+  const fieldIssues: string[] = [];
+  if (now === null) fieldIssues.push("'Now' must be a valid time (HH:MM).");
+  if (start === null) fieldIssues.push("'Start' must be a valid time (HH:MM).");
+  if (end === null) fieldIssues.push("'End' must be a valid time (HH:MM).");
+  if (now !== null && (now < 0 || now > 1439))
+    fieldIssues.push("'Now' must be between 00:00 and 23:59.");
+  if (start !== null && end !== null && start >= end)
+    fieldIssues.push("Start must be strictly before end.");
+  if (start !== null && now !== null && !(start > now))
+    fieldIssues.push("Start must be strictly after 'now'.");
+  if (duration !== null && duration > 120)
+    fieldIssues.push("Duration must not exceed 120 minutes (2 hours).");
+$ git show d809e10:src/App.tsx | sed -n '103,135p'  (handleCheck validation, 33 lines)
+    if (now === null || start === null || end === null) {
+      setResult({ ok: false, reason: "Invalid time input", detail: "Use HH:MM format for all fields." });
+      return;
+    }
+    if (now < 0 || now > 1439) {
+      setResult({ ok: false, reason: "'Now' is out of range", detail: "Now must be 00:00–23:59." });
+      return;
+    }
+    if (!(0 <= start && start < end && end <= 1440)) {
+      setResult({
+        ok: false,
+        reason: "Invalid time window",
+        detail: "Need 0 ≤ start < end ≤ 1440 (24:00).",
+      });
+      return;
+    }
+    if (!(start > now)) {
+      setResult({
+        ok: false,
+        reason: "Start is not in the future",
+        detail: `Start (${toHHMM(start)}) must be strictly after now (${toHHMM(now)}).`,
+      });
+      return;
+    }
+    const dur = end - start;
+    if (dur > 120) {
+      setResult({
+        ok: false,
+        reason: "Booking too long",
+        detail: `Duration is ${dur} min. Maximum allowed is 120 min.`,
+      });
+      return;
+    }
+
+================ duplicated defaults in original App.tsx
+73:  const [roomId, setRoomId] = useState<string>(ROOMS[0].id);
+74:  const [nowStr, setNowStr] = useState<string>("08:30");
+75:  const [startStr, setStartStr] = useState<string>("10:30");
+76:  const [endStr, setEndStr] = useState<string>("11:30");
+77:  const [blocked, setBlocked] = useState<boolean>(false);
+161:    setRoomId(ROOMS[0].id);
+162:    setNowStr("08:30");
+163:    setStartStr("10:30");
+164:    setEndStr("11:30");
+165:    setBlocked(false);
+
+================ test result files
+test-results/baseline.txt:       Tests  30 passed (30)
+test-results/after-refactor.txt:       Tests  33 passed (33)
+test-results/final.txt:       Tests  113 passed (113)
+
+================ final test count per file
+tests/unit/availability.test.ts 25
+tests/unit/roomFilter.test.ts 24
+tests/unit/time.test.ts 10
+tests/ui/App.regression.test.tsx 33
+tests/ui/features.test.tsx 21

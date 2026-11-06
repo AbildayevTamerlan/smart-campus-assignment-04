@@ -1,0 +1,47 @@
+%% AFTER: final version (HEAD). Solid arrow = value import, dashed arrow = type-only import.
+%% Generated from the real import statements in src/ (grep "from \"@/").
+flowchart LR
+  main["main.tsx"] --> app["App.tsx<br/>state + wiring only"]
+
+  subgraph UI["src/components/ (presentation only)"]
+    plain["AppHeader, TimeField,<br/>ValidationWarnings, CheckActions,<br/>RulesPanel<br/>(no project imports)"]
+    filters["RoomFilters"]
+    list["RoomList"]
+    readout["TimeReadout"]
+    resultc["ResultCard"]
+    panel["BookingsPanel"]
+    timeline["BookingTimeline"]
+    blist["BookingList"]
+    panel --> timeline
+    panel --> blist
+  end
+
+  subgraph DOMAIN["src/domain/ (pure TS, no React)"]
+    filter["roomFilter.ts<br/>F1 capacity, F2 equipment"]
+    avail["availability.ts<br/>validateTimes, checkAvailability<br/>time, duration, blocked, overlap"]
+    time["time.ts<br/>toHHMM, fromHHMM, limits"]
+    avail --> time
+  end
+
+  subgraph DATA["src/data/"]
+    rooms["rooms.ts<br/>Room type, EQUIPMENT,<br/>5 fictional rooms (1 blocked)"]
+  end
+
+  app --> plain & filters & list & readout & resultc & panel
+  app --> filter
+  app --> avail
+  app --> time
+  app --> rooms
+
+  filters --> rooms
+  list -.-> rooms
+  panel -.-> rooms
+  readout --> time
+  resultc -.-> avail
+  timeline --> time
+  timeline -.-> avail
+  blist --> time
+  blist -.-> avail
+
+  filter -.-> rooms
+  rooms -.-> avail
