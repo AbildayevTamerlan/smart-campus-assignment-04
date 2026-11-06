@@ -5,7 +5,9 @@ export const MINUTES_PER_DAY = 1440;
 export const MAX_BOOKING_MINUTES = 120;
 
 // Convert minutes after midnight (0–1440) to "HH:MM".
+// 1440 is the end of the day and is shown as "24:00" (not wrapped to "00:00").
 export function toHHMM(min: number): string {
+  if (min === MINUTES_PER_DAY) return "24:00";
   const m = ((min % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
   const h = Math.floor(m / 60);
   const mm = m % 60;

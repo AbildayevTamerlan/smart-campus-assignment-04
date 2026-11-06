@@ -18,13 +18,11 @@ import App from '@/App';
 
 // --- helpers ---------------------------------------------------------------
 
-// The original TimeField labels are not linked to their inputs (no htmlFor/id),
-// so find the input through the label's wrapper instead of getByLabelText.
+// Step 4: TimeField labels are now linked to their inputs (htmlFor/id), so the
+// inputs are found the accessible way. (Before, the tests had to go through the
+// label's wrapper element because getByLabelText could not find them.)
 function timeInput(label: 'Now' | 'Start' | 'End'): HTMLInputElement {
-  const labelEl = screen.getByText(label, { selector: 'label' });
-  const input = labelEl.parentElement?.querySelector('input');
-  if (!input) throw new Error(`No input found for label "${label}"`);
-  return input as HTMLInputElement;
+  return screen.getByLabelText<HTMLInputElement>(label);
 }
 
 function setTimes(times: { now?: string; start?: string; end?: string }) {
