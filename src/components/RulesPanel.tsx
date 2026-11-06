@@ -7,7 +7,8 @@ export function RulesPanel() {
         <li>• Times are integer minutes after midnight (0 ≤ start &lt; end ≤ 1440).</li>
         <li>• Start must be strictly after "now".</li>
         <li>• Duration ≤ 120 minutes (exactly 120 is allowed).</li>
-        <li>• Blocked rooms are always rejected.</li>
+        <li>• Only rooms with capacity ≥ attendees and ALL selected equipment are listed.</li>
+        <li>• Blocked rooms stay visible but are always rejected.</li>
         <li>• Touching endpoints (e.g. 10:00–11:00 and 11:00–12:00) do not overlap.</li>
         <li>• Existing bookings are never modified — this is a read-only check.</li>
       </ul>

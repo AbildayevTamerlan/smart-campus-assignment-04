@@ -33,8 +33,13 @@ function setTimes(times: { now?: string; start?: string; end?: string }) {
   if (times.end !== undefined) fireEvent.change(timeInput('End'), { target: { value: times.end } });
 }
 
+// Step 3b: the room <select> became a list of radio buttons (one per matching room).
 function selectRoom(roomId: string) {
-  fireEvent.change(screen.getByLabelText('Room'), { target: { value: roomId } });
+  const radio = screen
+    .getAllByRole<HTMLInputElement>('radio')
+    .find((r) => r.value === roomId);
+  if (!radio) throw new Error(`Room "${roomId}" is not in the list`);
+  fireEvent.click(radio);
 }
 
 function clickCheck() {
@@ -142,21 +147,23 @@ describe('AC2 – maximum duration is 120 minutes', () => {
 
 // --- AC3: blocked room rejects every request -------------------------------
 
+// Step 3b (planned change): the global "Room is blocked" toggle was removed.
+// Blocked now comes from the room data: med-014 (Media Studio 014) is blocked.
 describe('AC3 – blocked room rejects every request', () => {
-  it('rejects an otherwise free, valid slot when the room is blocked', () => {
+  it('rejects an otherwise free, valid slot when the room is blocked (med-014)', () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('switch'));
-    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
+    selectRoom('med-014');
     const r = check({ now: '08:00', start: '13:00', end: '14:00' });
     expect(r).toHaveTextContent('Unavailable');
     expect(r).toHaveTextContent(/blocked/i);
   });
 
-  it('accepts the same slot again once the room is unblocked', () => {
+  it('accepts the same slot in a non-blocked room (lib-201)', () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('switch'));
-    fireEvent.click(screen.getByRole('switch'));
-    const r = check({ now: '08:00', start: '13:00', end: '14:00' });
+    selectRoom('med-014');
+    expect(check({ now: '08:00', start: '13:00', end: '14:00' })).toHaveTextContent('Unavailable');
+    selectRoom('lib-201');
+    const r = check({});
     expect(r).toHaveTextContent('Available');
     expect(r).not.toHaveTextContent('Unavailable');
   });
