@@ -1,0 +1,46 @@
+
+> vite-react-typescript-starter@0.0.0 test
+> vitest run --reporter=verbose
+
+
+ RUN  v2.1.9 /home/claude/bolt/project
+
+ ✓ tests/App.regression.test.tsx > AC1 – valid time window and start strictly after now > reports the default request (08:30 / 10:30–11:30, lib-201) as Available
+ ✓ tests/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects an empty/invalid time field
+ ✓ tests/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects start after end
+ ✓ tests/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects start equal to end (zero-length booking)
+ ✓ tests/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects start equal to now (must be strictly after)
+ ✓ tests/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects start before now
+ ✓ tests/App.regression.test.tsx > AC1 – valid time window and start strictly after now > accepts start exactly one minute after now
+ ✓ tests/App.regression.test.tsx > AC2 – maximum duration is 120 minutes > accepts exactly 120 minutes (13:00–15:00 in a free gap)
+ ✓ tests/App.regression.test.tsx > AC2 – maximum duration is 120 minutes > rejects 121 minutes (13:00–15:01)
+ ✓ tests/App.regression.test.tsx > AC3 – blocked room rejects every request > rejects an otherwise free, valid slot when the room is blocked
+ ✓ tests/App.regression.test.tsx > AC3 – blocked room rejects every request > accepts the same slot again once the room is unblocked
+ ✓ tests/App.regression.test.tsx > AC4 – overlap with existing bookings > rejects a partial overlap and names the conflicting booking
+ ✓ tests/App.regression.test.tsx > AC4 – overlap with existing bookings > rejects a request that fully contains an existing booking
+ ✓ tests/App.regression.test.tsx > AC4 – overlap with existing bookings > rejects a request fully inside an existing booking
+ ✓ tests/App.regression.test.tsx > AC4 – overlap with existing bookings > accepts a request that starts exactly when a booking ends (10:00 after 09:00–10:00)
+ ✓ tests/App.regression.test.tsx > AC4 – overlap with existing bookings > accepts a request that ends exactly when a booking starts (until 12:00 before 12:00–13:00)
+ ✓ tests/App.regression.test.tsx > AC4 – overlap with existing bookings > accepts a request touching bookings on both sides (10:00–12:00, exactly 120 min)
+ ✓ tests/App.regression.test.tsx > AC5 – clear result and existing bookings are never modified > shows no result before the first check
+ ✓ tests/App.regression.test.tsx > AC5 – clear result and existing bookings are never modified > does not add, remove or change bookings after an Available check
+ ✓ tests/App.regression.test.tsx > AC5 – clear result and existing bookings are never modified > does not change bookings after an Unavailable (overlap) check
+ ✓ tests/App.regression.test.tsx > AC6 – validation messages > shows no warning box for the valid default inputs
+ ✓ tests/App.regression.test.tsx > AC6 – validation messages > warns when start is not after now
+ ✓ tests/App.regression.test.tsx > AC6 – validation messages > warns when start is not before end
+ ✓ tests/App.regression.test.tsx > AC6 – validation messages > warns when duration exceeds 120 minutes
+ ✓ tests/App.regression.test.tsx > AC6 – validation messages > warns when a field is empty
+ ✓ tests/App.regression.test.tsx > AC6 – validation messages > keeps the Check button enabled even when there are warnings
+ ✓ tests/App.regression.test.tsx > Room switching uses the selected room’s bookings > same slot is Available in lib-201 but Unavailable in bus-305 (Case Discussion)
+ ✓ tests/App.regression.test.tsx > Room switching uses the selected room’s bookings > shows the selected room’s bookings in the list
+ ✓ tests/App.regression.test.tsx > Room switching uses the selected room’s bookings > clears the previous result when the room changes
+ ✓ tests/App.regression.test.tsx > FIXED (step 2c) – no stale result after editing times > clears the old "Available" result as soon as the times are changed to an overlapping slot
+ ✓ tests/App.regression.test.tsx > FIXED (step 2c) – no stale result after editing times > clears the result when only "Now" is edited
+ ✓ tests/App.regression.test.tsx > FIXED (step 2c) – no stale result after editing times > clears the result when only "Start" is edited
+ ✓ tests/App.regression.test.tsx > FIXED (step 2c) – no stale result after editing times > clears the result when only "End" is edited
+
+ Test Files  1 passed (1)
+      Tests  33 passed (33)
+   Start at  23:45:25
+   Duration  1.86s (transform 123ms, setup 96ms, collect 165ms, tests 976ms, environment 314ms, prepare 48ms)
+

@@ -307,22 +307,30 @@ describe('Room switching uses the selected room’s bookings', () => {
   });
 });
 
-// --- Known bug, recorded as current behaviour (to be flipped in step 2c) ----
+// --- Fixed in step 2c (was the KNOWN BUG characterization test) ------------
 
-describe('KNOWN BUG (characterization) – stale result after editing times', () => {
-  it('CURRENT BEHAVIOUR: an old "Available" result stays visible after the times are changed to an overlapping slot', () => {
+describe('FIXED (step 2c) – no stale result after editing times', () => {
+  it('clears the old "Available" result as soon as the times are changed to an overlapping slot', () => {
     render(<App />);
-    let r = check({ now: '08:00', start: '10:30', end: '11:30' });
+    const r = check({ now: '08:00', start: '10:30', end: '11:30' });
     expect(r).toHaveTextContent('Available');
 
     // Change to 11:30–12:30, which overlaps Project Standup (12:00–13:00), without re-checking.
     setTimes({ start: '11:30', end: '12:30' });
 
-    // Bug: the stale result is still shown. Step 2c will change this expectation
-    // to "no result is shown after any input change".
-    r = result();
-    expect(r).toBeInTheDocument();
-    expect(r).toHaveTextContent('Available');
-    expect(r).not.toHaveTextContent('Unavailable');
+    // The stale result must be gone; re-checking gives the correct answer.
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    const again = check({});
+    expect(again).toHaveTextContent('Unavailable');
+    expect(again).toHaveTextContent('Project Standup');
+  });
+
+  it.each(['Now', 'Start', 'End'] as const)('clears the result when only "%s" is edited', (field) => {
+    render(<App />);
+    clickCheck();
+    expect(result()).toBeInTheDocument();
+    const values = { Now: '08:00', Start: '10:45', End: '11:15' };
+    fireEvent.change(timeInput(field), { target: { value: values[field] } });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

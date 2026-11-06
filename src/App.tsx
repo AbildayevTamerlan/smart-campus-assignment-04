@@ -65,6 +65,14 @@ function App() {
     setResult(checkAvailability({ now, start, end }, bookings, blocked));
   }
 
+  // Any edit to a time field invalidates the previous result (no stale answers).
+  function editTime(setter: (value: string) => void) {
+    return (value: string) => {
+      setter(value);
+      setResult(null);
+    };
+  }
+
   function handleReset() {
     setRoomId(ROOMS[0].id);
     setNowStr("08:30");
@@ -119,9 +127,9 @@ function App() {
 
           {/* Time inputs */}
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <TimeField label="Now" hint="current time" value={nowStr} onChange={setNowStr} icon={<Clock className="h-4 w-4" />} />
-            <TimeField label="Start" hint="booking begin" value={startStr} onChange={setStartStr} icon={<Clock className="h-4 w-4" />} />
-            <TimeField label="End" hint="booking end" value={endStr} onChange={setEndStr} icon={<Clock className="h-4 w-4" />} />
+            <TimeField label="Now" hint="current time" value={nowStr} onChange={editTime(setNowStr)} icon={<Clock className="h-4 w-4" />} />
+            <TimeField label="Start" hint="booking begin" value={startStr} onChange={editTime(setStartStr)} icon={<Clock className="h-4 w-4" />} />
+            <TimeField label="End" hint="booking end" value={endStr} onChange={editTime(setEndStr)} icon={<Clock className="h-4 w-4" />} />
           </div>
 
           {/* Duration + minute readout */}
