@@ -1,0 +1,126 @@
+
+> vite-react-typescript-starter@0.0.0 test
+> vitest run --reporter=verbose
+
+
+ RUN  v2.1.9 /home/claude/bolt/project
+
+ ✓ tests/ui/App.regression.test.tsx > AC1 – valid time window and start strictly after now > reports the default request (08:30 / 10:30–11:30, lib-201) as Available
+ ✓ tests/ui/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects an empty/invalid time field
+ ✓ tests/ui/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects start after end
+ ✓ tests/ui/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects start equal to end (zero-length booking)
+ ✓ tests/ui/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects start equal to now (must be strictly after)
+ ✓ tests/ui/App.regression.test.tsx > AC1 – valid time window and start strictly after now > rejects start before now
+ ✓ tests/ui/App.regression.test.tsx > AC1 – valid time window and start strictly after now > accepts start exactly one minute after now
+ ✓ tests/ui/App.regression.test.tsx > AC2 – maximum duration is 120 minutes > accepts exactly 120 minutes (13:00–15:00 in a free gap)
+ ✓ tests/ui/App.regression.test.tsx > AC2 – maximum duration is 120 minutes > rejects 121 minutes (13:00–15:01)
+ ✓ tests/ui/App.regression.test.tsx > AC3 – blocked room rejects every request > rejects an otherwise free, valid slot when the room is blocked (med-014)
+ ✓ tests/ui/App.regression.test.tsx > AC3 – blocked room rejects every request > accepts the same slot in a non-blocked room (lib-201)
+ ✓ tests/ui/App.regression.test.tsx > AC4 – overlap with existing bookings > rejects a partial overlap and names the conflicting booking
+ ✓ tests/ui/App.regression.test.tsx > AC4 – overlap with existing bookings > rejects a request that fully contains an existing booking
+ ✓ tests/ui/App.regression.test.tsx > AC4 – overlap with existing bookings > rejects a request fully inside an existing booking
+ ✓ tests/ui/App.regression.test.tsx > AC4 – overlap with existing bookings > accepts a request that starts exactly when a booking ends (10:00 after 09:00–10:00)
+ ✓ tests/ui/App.regression.test.tsx > AC4 – overlap with existing bookings > accepts a request that ends exactly when a booking starts (until 12:00 before 12:00–13:00)
+ ✓ tests/ui/App.regression.test.tsx > AC4 – overlap with existing bookings > accepts a request touching bookings on both sides (10:00–12:00, exactly 120 min)
+ ✓ tests/ui/App.regression.test.tsx > AC5 – clear result and existing bookings are never modified > shows no result before the first check
+ ✓ tests/ui/App.regression.test.tsx > AC5 – clear result and existing bookings are never modified > does not add, remove or change bookings after an Available check
+ ✓ tests/ui/App.regression.test.tsx > AC5 – clear result and existing bookings are never modified > does not change bookings after an Unavailable (overlap) check
+ ✓ tests/ui/App.regression.test.tsx > AC6 – validation messages > shows no warning box for the valid default inputs
+ ✓ tests/ui/App.regression.test.tsx > AC6 – validation messages > warns when start is not after now
+ ✓ tests/ui/App.regression.test.tsx > AC6 – validation messages > warns when start is not before end
+ ✓ tests/ui/App.regression.test.tsx > AC6 – validation messages > warns when duration exceeds 120 minutes
+ ✓ tests/ui/App.regression.test.tsx > AC6 – validation messages > warns when a field is empty
+ ✓ tests/ui/App.regression.test.tsx > AC6 – validation messages > keeps the Check button enabled even when there are warnings
+ ✓ tests/ui/App.regression.test.tsx > Room switching uses the selected room’s bookings > same slot is Available in lib-201 but Unavailable in bus-305 (Case Discussion)
+ ✓ tests/ui/App.regression.test.tsx > Room switching uses the selected room’s bookings > shows the selected room’s bookings in the list
+ ✓ tests/ui/App.regression.test.tsx > Room switching uses the selected room’s bookings > clears the previous result when the room changes
+ ✓ tests/ui/App.regression.test.tsx > FIXED (step 2c) – no stale result after editing times > clears the old "Available" result as soon as the times are changed to an overlapping slot
+ ✓ tests/ui/App.regression.test.tsx > FIXED (step 2c) – no stale result after editing times > clears the result when only "Now" is edited
+ ✓ tests/ui/App.regression.test.tsx > FIXED (step 2c) – no stale result after editing times > clears the result when only "Start" is edited
+ ✓ tests/ui/App.regression.test.tsx > FIXED (step 2c) – no stale result after editing times > clears the result when only "End" is edited
+ ✓ tests/ui/features.test.tsx > F1 – capacity filter in the UI > lists every room by default (1 attendee, no equipment)
+ ✓ tests/ui/features.test.tsx > F1 – capacity filter in the UI > 10 attendees keeps rooms with capacity >= 10 (Media Studio has exactly 10)
+ ✓ tests/ui/features.test.tsx > F1 – capacity filter in the UI > 11 attendees drops the capacity-10 room
+ ✓ tests/ui/features.test.tsx > F2 – equipment filter in the UI > Projector + Video conferencing lists only rooms with both
+ ✓ tests/ui/features.test.tsx > F2 – equipment filter in the UI > unchecking an item widens the list again
+ ✓ tests/ui/features.test.tsx > F3 – blocked room is visible but never Available > shows a "Blocked" badge on the blocked room only
+ ✓ tests/ui/features.test.tsx > F3 – blocked room is visible but never Available > checks as Unavailable for a valid slot that has no conflicting booking
+ ✓ tests/ui/features.test.tsx > F3 – blocked room is visible but never Available > stays Unavailable for several different slots
+ ✓ tests/ui/features.test.tsx > F4 – empty state when no rooms match > shows the empty state for impossible equipment and Clear filters brings rooms back
+ ✓ tests/ui/features.test.tsx > F4 – empty state when no rooms match > shows the empty state when attendees exceed every capacity
+ ✓ tests/ui/features.test.tsx > F4 – empty state when no rooms match > explains an invalid attendee count
+ ✓ tests/ui/features.test.tsx > F5 – result follows the selected room > the same slot gives different results in different rooms, using each room’s bookings
+ ✓ tests/ui/features.test.tsx > F5 – result follows the selected room > the bookings panel shows the selected room’s bookings
+ ✓ tests/ui/features.test.tsx > F5 – result follows the selected room > when the selected room is filtered out, the selection and the result are cleared
+ ✓ tests/ui/features.test.tsx > F5 – result follows the selected room > checking with no room selected says so instead of giving an answer
+ ✓ tests/ui/features.test.tsx > F5 – result follows the selected room > keeps the selection and result when a filter change still matches the selected room
+ ✓ tests/ui/features.test.tsx > End-to-end: filters -> pick a room -> check -> result > 20 people needing a projector: Engineering Lab 10:00–12:00 is Available, Seminar Room is not
+ ✓ tests/ui/features.test.tsx > End-to-end: filters -> pick a room -> check -> result > 8 people needing video conferencing: picking the blocked studio gives Unavailable
+ ✓ tests/ui/features.test.tsx > End-to-end: filters -> pick a room -> check -> result > Reset restores the default filters, room, times and clears the result
+ ✓ tests/ui/features.test.tsx > Housekeeping > the timeline ends with "24:00", not a second "00:00"
+ ✓ tests/ui/features.test.tsx > Housekeeping > time inputs and the attendees input are reachable by their labels
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC2 duration > accepts exactly 120 minutes
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC2 duration > rejects 121 minutes
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC4 touching vs overlapping > accepts a slot that ends exactly when the booking starts (540–600)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC4 touching vs overlapping > accepts a slot that starts exactly when the booking ends (660–720)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC4 touching vs overlapping > rejects a partial overlap at the start (570–630) and names the booking
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC4 touching vs overlapping > rejects a partial overlap at the end (630–690)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC4 touching vs overlapping > rejects a slot inside the booking (615–645)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC4 touching vs overlapping > rejects a slot that contains the booking (590–670)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC4 touching vs overlapping > rejects the identical slot (600–660)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC4 touching vs overlapping > overlap() treats touching endpoints as no overlap, in both orders
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC1 start strictly after now > rejects start == now
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC1 start strictly after now > rejects start before now
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC1 start strictly after now > accepts start == now + 1
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC1 start strictly after now > rejects start == end and start > end
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC1 start strictly after now > accepts end == 1440 at the domain level (the UI time input cannot enter 24:00)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC1 start strictly after now > rejects end > 1440 and start < 0
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC1 start strictly after now > rejects unparseable input (null fields)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC3 / F3 blocked > rejects a valid, free slot when blocked
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC3 / F3 blocked > rejects when blocked even with no bookings at all
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC3 / F3 blocked > still rejects invalid times on a blocked room (never Available)
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC3 / F3 blocked > the same slot is available when not blocked
+ ✓ tests/unit/availability.test.ts > checkAvailability – AC5 read-only > does not modify the bookings (frozen input, deep-equal afterwards)
+ ✓ tests/unit/availability.test.ts > validateTimes – one source for warnings and result > lists every issue in priority order
+ ✓ tests/unit/availability.test.ts > validateTimes – one source for warnings and result > reports each missing field separately
+ ✓ tests/unit/availability.test.ts > validateTimes – one source for warnings and result > returns the parsed times when valid
+ ✓ tests/unit/roomFilter.test.ts > F1 – capacity >= attendees > accepts capacity exactly equal to attendees
+ ✓ tests/unit/roomFilter.test.ts > F1 – capacity >= attendees > rejects capacity one less than attendees
+ ✓ tests/unit/roomFilter.test.ts > F1 – capacity >= attendees > on the catalog: 6 attendees keeps Library 201 (capacity 6), 7 drops it
+ ✓ tests/unit/roomFilter.test.ts > F2 – room must have ALL selected equipment > accepts a room that has all selected equipment
+ ✓ tests/unit/roomFilter.test.ts > F2 – room must have ALL selected equipment > accepts a room that has more than the selected equipment
+ ✓ tests/unit/roomFilter.test.ts > F2 – room must have ALL selected equipment > rejects a room that has some but not all of the selected equipment
+ ✓ tests/unit/roomFilter.test.ts > F2 – room must have ALL selected equipment > no equipment selected accepts any room, including one with no equipment
+ ✓ tests/unit/roomFilter.test.ts > F2 – room must have ALL selected equipment > on the catalog: Projector + Video conferencing -> bus-305 and med-014 only
+ ✓ tests/unit/roomFilter.test.ts > filterRooms > no filters (1 attendee, no equipment) returns every room in catalog order
+ ✓ tests/unit/roomFilter.test.ts > filterRooms > F1 and F2 combine: both must hold
+ ✓ tests/unit/roomFilter.test.ts > filterRooms > returns an empty list when nothing matches (F4 data)
+ ✓ tests/unit/roomFilter.test.ts > filterRooms > keeps blocked rooms in the result (F3 is decided by the booking rules)
+ ✓ tests/unit/roomFilter.test.ts > filterRooms > does not modify the room list
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > parses "1" as 1
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > parses "12" as 12
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > parses " 5 " as 5
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > rejects ""
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > rejects "0"
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > rejects "-1"
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > rejects "2.5"
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > rejects "abc"
+ ✓ tests/unit/roomFilter.test.ts > parseAttendees > rejects "1e2"
+ ✓ tests/unit/roomFilter.test.ts > catalog sanity > has at least 4 rooms, unique ids, and exactly one blocked room
+ ✓ tests/unit/roomFilter.test.ts > catalog sanity > every booking is a valid interval inside the day
+ ✓ tests/unit/time.test.ts > toHHMM > 0 -> 00:00
+ ✓ tests/unit/time.test.ts > toHHMM > 600 -> 10:00
+ ✓ tests/unit/time.test.ts > toHHMM > 1439 -> 23:59
+ ✓ tests/unit/time.test.ts > toHHMM > 1440 -> 24:00
+ ✓ tests/unit/time.test.ts > fromHHMM > parses valid HH:MM
+ ✓ tests/unit/time.test.ts > fromHHMM > rejects ""
+ ✓ tests/unit/time.test.ts > fromHHMM > rejects "9:00"
+ ✓ tests/unit/time.test.ts > fromHHMM > rejects "24:00"
+ ✓ tests/unit/time.test.ts > fromHHMM > rejects "12:60"
+ ✓ tests/unit/time.test.ts > fromHHMM > rejects "ab:cd"
+
+ Test Files  5 passed (5)
+      Tests  113 passed (113)
+   Start at  00:07:40
+   Duration  6.08s (transform 178ms, setup 436ms, collect 337ms, tests 2.70s, environment 1.49s, prepare 229ms)
+
