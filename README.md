@@ -24,7 +24,7 @@ Started as a Bolt.new export (commit `d809e10`). It was then refactored, extende
 
 ## Requirements
 
-- **Node.js 18.18 or newer** (ESLint 9 needs ≥ 18.18; Vite 5 and Vitest 2 need `^18 || >=20`). Tested with Node 22.23.4 and npm 10.9.9.
+- **Node.js 18.18 or newer** (ESLint 9 needs ≥ 18.18; Vite 5 and Vitest 2 need `^18 || >=20`). Tested with Node 22.23.5 and npm 10.9.9 locally; CI uses Node 22.
 - npm (comes with Node).
 
 ## Setup and commands
@@ -32,12 +32,20 @@ Started as a Bolt.new export (commit `d809e10`). It was then refactored, extende
 ```sh
 npm ci              # install exact dependency versions from package-lock.json
 npm run dev         # start the dev server (http://localhost:5173)
-npm test            # run all 113 tests once (Vitest + jsdom)
+npm test            # run all 137 tests once (Vitest + jsdom)
 npm run build       # production build into dist/
 npm run preview     # serve the production build
-npm run typecheck   # TypeScript check (tsc --noEmit)
+npm run typecheck   # TypeScript check of src/, tests/ and the Vite/Vitest configs (three tsc passes)
 npm run lint        # ESLint
+npm run check       # the full gate: test, typecheck, lint, build (stops at the first failure)
 ```
+
+Run `npm run check` before every commit; it must exit 0.
+
+## CI and agent rules
+
+- **CI:** [.github/workflows/check.yml](.github/workflows/check.yml) runs `npm ci` and `npm run check` on every push.
+- **AGENTS.md:** [AGENTS.md](AGENTS.md) holds the rules for AI coding agents: architecture, safe commands, coding conventions, the acceptance criteria AC1–AC5, forbidden actions and the review gates a change must pass before it is accepted.
 
 ## Project structure
 
@@ -49,16 +57,19 @@ src/
     rooms.ts                Room type, EQUIPMENT list, 5 fictional rooms (1 blocked)
   domain/                   Pure TypeScript, no React
     time.ts                 toHHMM / fromHHMM, MINUTES_PER_DAY, MAX_BOOKING_MINUTES
-    availability.ts         validateTimes + checkAvailability: time, duration, blocked, overlap (AC1–AC5, F3)
+    availability.ts         validateTimes + checkAvailability: integer minutes, time window, duration, blocked, overlap (AC1–AC5, F3)
     roomFilter.ts           parseAttendees, hasCapacity (F1), hasAllEquipment (F2), filterRooms
   components/               Presentation only
     AppHeader, RoomFilters, RoomList, TimeField, TimeReadout, ValidationWarnings,
     CheckActions, ResultCard, BookingsPanel, BookingTimeline, BookingList, RulesPanel
 tests/
   setup.ts                  jest-dom matchers, cleanup
-  unit/                     availability (25), roomFilter (24), time (10)
-  ui/                       App.regression (33: written against the original), features (21: F1–F5, end-to-end)
-test-results/               Saved test output: baseline, after-refactor, final
+  unit/                     availability (40), roomFilter (24), time (10)
+  ui/                       App.regression (33: written against the original), features (21: F1–F5, end-to-end),
+                            ruleDisplay (9: rule texts, duration chip, timeline overlay)
+test-results/               Saved test output: baseline, after-refactor, final, a5-baseline, a5-final
+.github/workflows/check.yml CI: npm ci + npm run check on every push
+AGENTS.md                   Rules for AI coding agents
 docs/                       Evaluation, diagrams, screenshots
 ```
 
@@ -72,7 +83,9 @@ docs/                       Evaluation, diagrams, screenshots
 - [docs/measurements.txt](docs/measurements.txt): raw output of the commands behind the comparison
 - [test-results/baseline.txt](test-results/baseline.txt): 30/30, regression tests on the **original** code
 - [test-results/after-refactor.txt](test-results/after-refactor.txt): 33/33, after refactoring and the stale-result fix
-- [test-results/final.txt](test-results/final.txt): 113/113, final suite (59 unit + 54 UI)
+- [test-results/final.txt](test-results/final.txt): 113/113, Assignment 4 final suite (59 unit + 54 UI)
+- [test-results/a5-baseline.txt](test-results/a5-baseline.txt): 113/113, all four checks at tag `a5-baseline` (`534eeca`)
+- [test-results/a5-final.txt](test-results/a5-final.txt): 137/137 (74 unit + 63 UI), all four checks and `npm run check` after the Assignment 5 fixes
 
 ## Known limitations
 
@@ -96,3 +109,9 @@ The full list is in [docs/EVALUATION.md](docs/EVALUATION.md#remaining-limitation
 | `1688fc5` | Housekeeping: Supabase removed, labels linked, title |
 | `1543f39` | Full test suite (113/113) |
 | `31e3237` | Evaluation docs |
+| `d7a9678` | AGENTS.md: rules for AI coding agents |
+| `d14c05a` | Shared AC1/AC2 rule helpers for validation and the UI |
+| `a92c3f0` | Check output at `a5-baseline` |
+| `eabf370` | Fix: reject non-integer minutes (AC1) |
+| `748253b` | Typecheck covers tests, `npm run check`, CI workflow |
+| `9ff3f69` | Check output after the fixes (137/137) |
