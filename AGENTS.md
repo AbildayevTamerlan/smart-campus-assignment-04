@@ -21,6 +21,7 @@ the browser: no backend, login, database or external API.
 | `src/components/` | Presentational components, one per file, no business rules. |
 | `tests/unit/` | Vitest unit tests for `src/domain`. |
 | `tests/ui/` | Vitest + jsdom + Testing Library tests that render `App`. |
+| `.github/workflows/check.yml` | CI: on every push runs `npm ci` and `npm run check`. |
 | `docs/`, `test-results/` | Evaluation notes, diagrams, saved test logs. Do not regenerate unless asked. |
 
 ## Setup and safe commands
@@ -31,9 +32,10 @@ Node 18.18+ (tested on Node 22, npm 10).
 npm ci              # install exact versions from package-lock.json (never `npm install <pkg>`)
 npm run dev         # dev server on http://localhost:5173
 npm test            # vitest run (all tests, once)
-npm run typecheck   # tsc --noEmit -p tsconfig.app.json (covers src/ only)
+npm run typecheck   # tsc on src/ (tsconfig.app.json), src/ + tests/ (tsconfig.test.json), vite/vitest configs (tsconfig.node.json)
 npm run lint        # eslint .
 npm run build       # vite build into dist/ (gitignored)
+npm run check       # all four gates in order: test, typecheck, lint, build
 ```
 
 ## Coding conventions (already followed by the code)
@@ -60,11 +62,13 @@ npm run build       # vite build into dist/ (gitignored)
 
 ## Test expectations
 
-Before every commit, run all four and confirm each exits 0:
+Before every commit, run the gate and confirm it exits 0:
 
 ```sh
-npm test && npm run typecheck && npm run lint && npm run build
+npm run check   # = npm test && npm run typecheck && npm run lint && npm run build
 ```
+
+CI runs the same `npm run check` on every push. A green local run does not replace the CI result; report both.
 
 - Every AC1–AC5 test in `tests/unit/availability.test.ts` and `tests/ui/App.regression.test.tsx` must pass.
 - A behaviour change needs a test that names the AC or feature it covers (e.g. `describe('checkAvailability – AC2 duration', …)`).
@@ -89,7 +93,7 @@ npm test && npm run typecheck && npm run lint && npm run build
 
 1. A short summary: what changed, why, and which AC or issue it addresses.
 2. `git diff --stat` and the full `git diff`.
-3. The actual output (pass/fail totals and exit codes) of `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+3. The actual output (pass/fail totals and exit code) of `npm run check`, which runs test, typecheck, lint and build.
 4. Any new or changed tests, with the AC each one covers.
 5. Facts vs assumptions: say what you ran or read, and what you are assuming.
 

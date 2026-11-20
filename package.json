@@ -8,8 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.node.json",
+    "test": "vitest run",
+    "check": "npm test && npm run typecheck && npm run lint && npm run build"
   },
   "dependencies": {
     "lucide-react": "^0.446.0",
