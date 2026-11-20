@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   type Booking,
   checkAvailability,
+  durationStatus,
+  exceedsMaxDuration,
+  isValidWindow,
   overlap,
   validateTimes,
 } from '@/domain/availability';
@@ -154,5 +157,57 @@ describe('validateTimes – one source for warnings and result', () => {
       ok: true,
       times: { now: 0, start: 60, end: 120 },
     });
+  });
+});
+
+describe('validateTimes – AC1 / AC2 message texts', () => {
+  const issueFor = (input: { now: number; start: number; end: number }) => {
+    const v = validateTimes(input);
+    if (v.ok) throw new Error('expected an issue');
+    return v.issues[0];
+  };
+
+  it('AC1 out-of-range window names 00:00, 24:00 and 1440', () => {
+    expect(issueFor({ now: -10, start: -1, end: 60 })).toEqual({
+      message: 'Times must be between 00:00 and 24:00.',
+      reason: 'Invalid time window',
+      detail: 'Need 0 ≤ start < end ≤ 1440 (24:00).',
+    });
+  });
+
+  it('AC1 start >= end has its own message', () => {
+    expect(issueFor({ now: 0, start: 600, end: 600 }).message).toBe('Start must be strictly before end.');
+  });
+
+  it('AC2 too long names the 120-minute limit', () => {
+    expect(issueFor({ now: 0, start: 600, end: 721 })).toEqual({
+      message: 'Duration must not exceed 120 minutes (2 hours).',
+      reason: 'Booking too long',
+      detail: 'Duration is 121 min. Maximum allowed is 120 min.',
+    });
+  });
+});
+
+describe('shared rule helpers – AC1 / AC2', () => {
+  it('isValidWindow: AC1 0 <= start < end <= 1440, boundaries included', () => {
+    expect(isValidWindow(0, 1)).toBe(true);
+    expect(isValidWindow(1380, 1440)).toBe(true);
+    expect(isValidWindow(600, 600)).toBe(false);
+    expect(isValidWindow(660, 600)).toBe(false);
+    expect(isValidWindow(-1, 60)).toBe(false);
+    expect(isValidWindow(1380, 1441)).toBe(false);
+  });
+
+  it('exceedsMaxDuration: AC2 120 is allowed, 121 is not', () => {
+    expect(exceedsMaxDuration(780, 900)).toBe(false);
+    expect(exceedsMaxDuration(780, 901)).toBe(true);
+  });
+
+  it('durationStatus: tooLong (AC2), notPositive (AC1 start < end), ok', () => {
+    expect(durationStatus(780, 901)).toBe('tooLong');
+    expect(durationStatus(780, 900)).toBe('ok');
+    expect(durationStatus(780, 781)).toBe('ok');
+    expect(durationStatus(780, 780)).toBe('notPositive');
+    expect(durationStatus(900, 780)).toBe('notPositive');
   });
 });
