@@ -61,9 +61,9 @@ export function durationStatus(start: number, end: number): DurationStatus {
   return "ok";
 }
 
-// The single source of truth for AC1 (valid window, start strictly after now)
-// and AC2 (max duration). Returns every issue, in priority order: the live
-// warnings show all of them, the Check result shows the first one.
+// The single source of truth for AC1 (integer minutes, valid window, start
+// strictly after now) and AC2 (max duration). Returns every issue, in priority
+// order: the live warnings show all of them, the Check result shows the first one.
 export function validateTimes({ now, start, end }: TimeInput): TimeValidation {
   const issues: TimeIssue[] = [];
   const invalidInput = (field: string): TimeIssue => ({
@@ -71,10 +71,20 @@ export function validateTimes({ now, start, end }: TimeInput): TimeValidation {
     reason: "Invalid time input",
     detail: "Use HH:MM format for all fields.",
   });
+  const notWholeMinutes = (field: string): TimeIssue => ({
+    message: `'${field}' must be a whole number of minutes.`,
+    reason: "Invalid time input",
+    detail: "Times must be integer minutes after midnight.",
+  });
+  // AC1: each field must be present and an integer (rejects 600.5, NaN, Infinity).
+  const checkField = (field: string, value: number | null) => {
+    if (value === null) issues.push(invalidInput(field));
+    else if (!Number.isInteger(value)) issues.push(notWholeMinutes(field));
+  };
 
-  if (now === null) issues.push(invalidInput("Now"));
-  if (start === null) issues.push(invalidInput("Start"));
-  if (end === null) issues.push(invalidInput("End"));
+  checkField("Now", now);
+  checkField("Start", start);
+  checkField("End", end);
 
   if (start !== null && end !== null && !isValidWindow(start, end)) {
     issues.push({

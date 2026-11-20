@@ -72,7 +72,6 @@ npm test && npm run typecheck && npm run lint && npm run build
 
 ## Known issues (do not "fix" without asking)
 
-- AC1 integer check missing in `validateTimes` (non-integer minutes are accepted at domain level). Open.
 - Booking intervals are not validated; a reversed booking (`start > end`) never overlaps. Open.
 - End time 24:00 cannot be entered on the page (`<input type="time">` stops at 23:59). Documented, kept as is.
 - `npm audit` reports dev-only vulnerabilities; fixing the critical ones needs a major Vitest upgrade. Deferred until reviewed.

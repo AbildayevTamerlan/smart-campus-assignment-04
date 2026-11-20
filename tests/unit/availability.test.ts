@@ -211,3 +211,67 @@ describe('shared rule helpers – AC1 / AC2', () => {
     expect(durationStatus(900, 780)).toBe('notPositive');
   });
 });
+
+describe('checkAvailability – AC1 integer minutes', () => {
+  const at = (now: number, start: number, end: number) =>
+    checkAvailability({ now, start, end }, BOOKINGS, false);
+
+  it('rejects a fractional start', () => {
+    const r = at(0, 780.5, 840);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe('Invalid time input');
+    expect(r.detail).toBe('Times must be integer minutes after midnight.');
+  });
+
+  it('rejects a fractional end', () => {
+    expect(at(0, 780, 840.5)).toMatchObject({ ok: false, reason: 'Invalid time input' });
+  });
+
+  it('rejects a fractional now', () => {
+    expect(at(0.5, 780, 840)).toMatchObject({ ok: false, reason: 'Invalid time input' });
+  });
+
+  it('rejects a fractional slot that would otherwise be free (600.5–660.5 was "Available")', () => {
+    expect(checkAvailability({ now: 0, start: 600.5, end: 660.5 }, [], false).ok).toBe(false);
+  });
+
+  it('rejects NaN and Infinity as invalid input', () => {
+    expect(at(NaN, 780, 840).reason).toBe('Invalid time input');
+    expect(at(0, Infinity, 840).reason).toBe('Invalid time input');
+    expect(at(0, 780, -Infinity).reason).toBe('Invalid time input');
+  });
+
+  it('still accepts integer boundaries (start = now + 1, end = 1440)', () => {
+    expect(at(779, 780, 840).ok).toBe(true);
+    expect(at(0, 1380, 1440).ok).toBe(true);
+  });
+
+  it('a blocked room stays Unavailable with fractional input (AC3 unaffected)', () => {
+    expect(checkAvailability({ now: 0, start: 780.5, end: 840 }, [], true).ok).toBe(false);
+  });
+});
+
+describe('validateTimes – AC1 integer check keeps the priority order', () => {
+  it('lists the integer issue first, then the existing issues in their order', () => {
+    const v = validateTimes({ now: 800, start: 780.5, end: 1000 });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.issues.map((i) => i.message)).toEqual([
+        "'Start' must be a whole number of minutes.",
+        "Start must be strictly after 'now'.",
+        'Duration must not exceed 120 minutes (2 hours).',
+      ]);
+    }
+  });
+
+  it('reports a missing field and a fractional field separately, in field order', () => {
+    const v = validateTimes({ now: null, start: 780.5, end: 840 });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.issues.map((i) => i.message)).toEqual([
+        "'Now' must be a valid time (HH:MM).",
+        "'Start' must be a whole number of minutes.",
+      ]);
+    }
+  });
+});
