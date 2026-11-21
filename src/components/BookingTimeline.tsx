@@ -1,4 +1,4 @@
-import type { Booking } from "@/domain/availability";
+import { type Booking, isValidWindow } from "@/domain/availability";
 import { MINUTES_PER_DAY, toHHMM } from "@/domain/time";
 
 type BookingTimelineProps = {
@@ -27,7 +27,7 @@ export function BookingTimeline({ bookings, start, end }: BookingTimelineProps) 
           </div>
         ))}
         {/* Proposed slot overlay */}
-        {start !== null && end !== null && start < end && end <= MINUTES_PER_DAY && (
+        {start !== null && end !== null && isValidWindow(start, end) && (
           <div
             className="absolute top-1 bottom-1 rounded border-2 border-dashed border-blue-700 bg-blue-300/40"
             style={{ left: pct(start), width: pct(end - start) }}

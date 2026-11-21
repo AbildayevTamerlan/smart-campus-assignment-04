@@ -1,0 +1,71 @@
+# Check output: a5-baseline (534eeca)
+# Commit:  534eecafac4665e79aeda6d9ca9c777e708e3444 (534eeca) Add README: overview, requirements, commands, structure, links
+# Ref:     a5-baseline / branch: (detached HEAD)
+# Date:    2026-11-20T16:56:22Z
+# Node v22.23.5, npm 10.9.9, OS Linux 6.18.44-fc-v726
+
+================================================================
+$ npm test
+================================================================
+
+> vite-react-typescript-starter@0.0.0 test
+> vitest run
+
+
+ RUN  v2.1.9 <repo>
+
+ ✓ tests/ui/App.regression.test.tsx (33 tests) 1644ms
+ ✓ tests/ui/features.test.tsx (21 tests) 1167ms
+ ✓ tests/unit/availability.test.ts (25 tests) 6ms
+ ✓ tests/unit/roomFilter.test.ts (24 tests) 12ms
+ ✓ tests/unit/time.test.ts (10 tests) 4ms
+
+ Test Files  5 passed (5)
+      Tests  113 passed (113)
+   Start at  21:56:22
+   Duration  6.25s (transform 187ms, setup 500ms, collect 367ms, tests 2.83s, environment 1.59s, prepare 257ms)
+--> EXIT CODE: 0
+
+================================================================
+$ npm run typecheck
+================================================================
+
+> vite-react-typescript-starter@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.app.json
+--> EXIT CODE: 0
+
+================================================================
+$ npm run lint
+================================================================
+
+> vite-react-typescript-starter@0.0.0 lint
+> eslint .
+--> EXIT CODE: 0
+
+================================================================
+$ npm run build
+================================================================
+
+> vite-react-typescript-starter@0.0.0 build
+> vite build
+
+vite v5.4.8 building for production...
+transforming...
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 1584 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.54 kB │ gzip:  0.33 kB
+dist/assets/index-CUi8cbQa.css   14.89 kB │ gzip:  3.52 kB
+dist/assets/index-CHumS9be.js   164.97 kB │ gzip: 52.31 kB
+✓ built in 2.32s
+--> EXIT CODE: 0
+
+================================================================
+SUMMARY
+  npm test               EXIT 0
+  npm run typecheck      EXIT 0
+  npm run lint           EXIT 0
+  npm run build          EXIT 0

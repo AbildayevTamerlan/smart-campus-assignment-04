@@ -41,9 +41,29 @@ export function overlap(aStart: number, aEnd: number, bStart: number, bEnd: numb
   return aStart < bEnd && bStart < aEnd;
 }
 
-// The single source of truth for AC1 (valid window, start strictly after now)
-// and AC2 (max duration). Returns every issue, in priority order: the live
-// warnings show all of them, the Check result shows the first one.
+// AC1 window: 0 ≤ start < end ≤ 1440. Shared by validateTimes and the timeline.
+export function isValidWindow(start: number, end: number): boolean {
+  return 0 <= start && start < end && end <= MINUTES_PER_DAY;
+}
+
+// AC2: longer than MAX_BOOKING_MINUTES (exactly the maximum is allowed).
+export function exceedsMaxDuration(start: number, end: number): boolean {
+  return end - start > MAX_BOOKING_MINUTES;
+}
+
+// Duration classification for display: too long (AC2), not positive (AC1
+// start < end violated), or ok. Too long is checked first.
+export type DurationStatus = "tooLong" | "notPositive" | "ok";
+
+export function durationStatus(start: number, end: number): DurationStatus {
+  if (exceedsMaxDuration(start, end)) return "tooLong";
+  if (end - start <= 0) return "notPositive";
+  return "ok";
+}
+
+// The single source of truth for AC1 (integer minutes, valid window, start
+// strictly after now) and AC2 (max duration). Returns every issue, in priority
+// order: the live warnings show all of them, the Check result shows the first one.
 export function validateTimes({ now, start, end }: TimeInput): TimeValidation {
   const issues: TimeIssue[] = [];
   const invalidInput = (field: string): TimeIssue => ({
@@ -51,19 +71,29 @@ export function validateTimes({ now, start, end }: TimeInput): TimeValidation {
     reason: "Invalid time input",
     detail: "Use HH:MM format for all fields.",
   });
+  const notWholeMinutes = (field: string): TimeIssue => ({
+    message: `'${field}' must be a whole number of minutes.`,
+    reason: "Invalid time input",
+    detail: "Times must be integer minutes after midnight.",
+  });
+  // AC1: each field must be present and an integer (rejects 600.5, NaN, Infinity).
+  const checkField = (field: string, value: number | null) => {
+    if (value === null) issues.push(invalidInput(field));
+    else if (!Number.isInteger(value)) issues.push(notWholeMinutes(field));
+  };
 
-  if (now === null) issues.push(invalidInput("Now"));
-  if (start === null) issues.push(invalidInput("Start"));
-  if (end === null) issues.push(invalidInput("End"));
+  checkField("Now", now);
+  checkField("Start", start);
+  checkField("End", end);
 
-  if (start !== null && end !== null && !(0 <= start && start < end && end <= MINUTES_PER_DAY)) {
+  if (start !== null && end !== null && !isValidWindow(start, end)) {
     issues.push({
       message:
         start >= end
           ? "Start must be strictly before end."
-          : "Times must be between 00:00 and 24:00.",
+          : `Times must be between ${toHHMM(0)} and ${toHHMM(MINUTES_PER_DAY)}.`,
       reason: "Invalid time window",
-      detail: "Need 0 ≤ start < end ≤ 1440 (24:00).",
+      detail: `Need 0 ≤ start < end ≤ ${MINUTES_PER_DAY} (${toHHMM(MINUTES_PER_DAY)}).`,
     });
   }
 
@@ -75,7 +105,7 @@ export function validateTimes({ now, start, end }: TimeInput): TimeValidation {
     });
   }
 
-  if (start !== null && end !== null && end - start > MAX_BOOKING_MINUTES) {
+  if (start !== null && end !== null && exceedsMaxDuration(start, end)) {
     issues.push({
       message: `Duration must not exceed ${MAX_BOOKING_MINUTES} minutes (2 hours).`,
       reason: "Booking too long",

@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   type Booking,
   checkAvailability,
+  durationStatus,
+  exceedsMaxDuration,
+  isValidWindow,
   overlap,
   validateTimes,
 } from '@/domain/availability';
@@ -154,5 +157,121 @@ describe('validateTimes – one source for warnings and result', () => {
       ok: true,
       times: { now: 0, start: 60, end: 120 },
     });
+  });
+});
+
+describe('validateTimes – AC1 / AC2 message texts', () => {
+  const issueFor = (input: { now: number; start: number; end: number }) => {
+    const v = validateTimes(input);
+    if (v.ok) throw new Error('expected an issue');
+    return v.issues[0];
+  };
+
+  it('AC1 out-of-range window names 00:00, 24:00 and 1440', () => {
+    expect(issueFor({ now: -10, start: -1, end: 60 })).toEqual({
+      message: 'Times must be between 00:00 and 24:00.',
+      reason: 'Invalid time window',
+      detail: 'Need 0 ≤ start < end ≤ 1440 (24:00).',
+    });
+  });
+
+  it('AC1 start >= end has its own message', () => {
+    expect(issueFor({ now: 0, start: 600, end: 600 }).message).toBe('Start must be strictly before end.');
+  });
+
+  it('AC2 too long names the 120-minute limit', () => {
+    expect(issueFor({ now: 0, start: 600, end: 721 })).toEqual({
+      message: 'Duration must not exceed 120 minutes (2 hours).',
+      reason: 'Booking too long',
+      detail: 'Duration is 121 min. Maximum allowed is 120 min.',
+    });
+  });
+});
+
+describe('shared rule helpers – AC1 / AC2', () => {
+  it('isValidWindow: AC1 0 <= start < end <= 1440, boundaries included', () => {
+    expect(isValidWindow(0, 1)).toBe(true);
+    expect(isValidWindow(1380, 1440)).toBe(true);
+    expect(isValidWindow(600, 600)).toBe(false);
+    expect(isValidWindow(660, 600)).toBe(false);
+    expect(isValidWindow(-1, 60)).toBe(false);
+    expect(isValidWindow(1380, 1441)).toBe(false);
+  });
+
+  it('exceedsMaxDuration: AC2 120 is allowed, 121 is not', () => {
+    expect(exceedsMaxDuration(780, 900)).toBe(false);
+    expect(exceedsMaxDuration(780, 901)).toBe(true);
+  });
+
+  it('durationStatus: tooLong (AC2), notPositive (AC1 start < end), ok', () => {
+    expect(durationStatus(780, 901)).toBe('tooLong');
+    expect(durationStatus(780, 900)).toBe('ok');
+    expect(durationStatus(780, 781)).toBe('ok');
+    expect(durationStatus(780, 780)).toBe('notPositive');
+    expect(durationStatus(900, 780)).toBe('notPositive');
+  });
+});
+
+describe('checkAvailability – AC1 integer minutes', () => {
+  const at = (now: number, start: number, end: number) =>
+    checkAvailability({ now, start, end }, BOOKINGS, false);
+
+  it('rejects a fractional start', () => {
+    const r = at(0, 780.5, 840);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe('Invalid time input');
+    expect(r.detail).toBe('Times must be integer minutes after midnight.');
+  });
+
+  it('rejects a fractional end', () => {
+    expect(at(0, 780, 840.5)).toMatchObject({ ok: false, reason: 'Invalid time input' });
+  });
+
+  it('rejects a fractional now', () => {
+    expect(at(0.5, 780, 840)).toMatchObject({ ok: false, reason: 'Invalid time input' });
+  });
+
+  it('rejects a fractional slot that would otherwise be free (600.5–660.5 was "Available")', () => {
+    expect(checkAvailability({ now: 0, start: 600.5, end: 660.5 }, [], false).ok).toBe(false);
+  });
+
+  it('rejects NaN and Infinity as invalid input', () => {
+    expect(at(NaN, 780, 840).reason).toBe('Invalid time input');
+    expect(at(0, Infinity, 840).reason).toBe('Invalid time input');
+    expect(at(0, 780, -Infinity).reason).toBe('Invalid time input');
+  });
+
+  it('still accepts integer boundaries (start = now + 1, end = 1440)', () => {
+    expect(at(779, 780, 840).ok).toBe(true);
+    expect(at(0, 1380, 1440).ok).toBe(true);
+  });
+
+  it('a blocked room stays Unavailable with fractional input (AC3 unaffected)', () => {
+    expect(checkAvailability({ now: 0, start: 780.5, end: 840 }, [], true).ok).toBe(false);
+  });
+});
+
+describe('validateTimes – AC1 integer check keeps the priority order', () => {
+  it('lists the integer issue first, then the existing issues in their order', () => {
+    const v = validateTimes({ now: 800, start: 780.5, end: 1000 });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.issues.map((i) => i.message)).toEqual([
+        "'Start' must be a whole number of minutes.",
+        "Start must be strictly after 'now'.",
+        'Duration must not exceed 120 minutes (2 hours).',
+      ]);
+    }
+  });
+
+  it('reports a missing field and a fractional field separately, in field order', () => {
+    const v = validateTimes({ now: null, start: 780.5, end: 840 });
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.issues.map((i) => i.message)).toEqual([
+        "'Now' must be a valid time (HH:MM).",
+        "'Start' must be a whole number of minutes.",
+      ]);
+    }
   });
 });
